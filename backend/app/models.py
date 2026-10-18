@@ -30,6 +30,9 @@ class ApplicationStatus(str, enum.Enum):
     pending = "pending"
     accepted = "accepted"
     declined = "declined"
+    # Кандидат сам отозвал отклик, пока решения не было. Из этого статуса можно
+    # откликнуться снова — запись переиспользуется, ограничение уникальности не мешает.
+    withdrawn = "withdrawn"
 
 
 class User(Base):

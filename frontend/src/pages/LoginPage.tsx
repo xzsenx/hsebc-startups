@@ -1,118 +1,214 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { ChevronRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 
-import { ErrorBox } from "../components/ui";
+import { Field, PasswordField, useErrorFocus } from "../components/Field";
+import { Alert, Avatar, Spinner } from "../components/ui";
+import { ApiError } from "../lib/api";
 import { useAuth } from "../lib/auth";
+import { usePage } from "../lib/hooks";
+import { haptic } from "../lib/telegram";
+import { rules, safeNext, validate } from "../lib/validation";
 
 const DEMO = [
-  { email: "anna@hsebc-demo.ru", label: "Анна — автор публикаций" },
-  { email: "maks@hsebc-demo.ru", label: "Максим — откликается" },
+  { email: "anna@hsebc-demo.ru", name: "Анна Ковалёва", role: "Автор публикаций, есть входящий отклик" },
+  { email: "maks@hsebc-demo.ru", name: "Максим Орлов", role: "Откликался, один отклик уже принят" },
 ];
+const DEMO_PASSWORD = "demo1234";
+
+type Mode = "login" | "register";
+const EMPTY = { email: "", password: "", name: "", headline: "", telegram: "" };
 
 export default function LoginPage() {
-  const { login, register } = useAuth();
+  const { user, login, register } = useAuth();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"login" | "register">("login");
-  const [form, setForm] = useState({ email: "", password: "", name: "", headline: "", telegram: "" });
-  const [error, setError] = useState("");
+  const [params] = useSearchParams();
+  const next = safeNext(params.get("next"));
+  const [mode, setMode] = useState<Mode>("login");
+  const heading = usePage(mode === "login" ? "Вход" : "Регистрация");
+  const formRef = useRef<HTMLFormElement>(null);
+  const focusErrors = useErrorFocus(formRef);
+
+  const [values, setValues] = useState(EMPTY);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
+  const [formError, setFormError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const update = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm({ ...form, [field]: e.target.value });
+  useEffect(() => {
+    setTouched({});
+    setServerErrors({});
+    setFormError("");
+  }, [mode]);
+
+  if (user) return <Navigate to={next} replace />;
+
+  const schema =
+    mode === "login"
+      ? { email: [rules.required("Введите почту"), rules.email()], password: [rules.required("Введите пароль")] }
+      : {
+          name: [rules.required("Как к вам обращаться?"), rules.minLength(2), rules.maxLength(120)],
+          email: [rules.required("Введите почту"), rules.email()],
+          password: [rules.required("Придумайте пароль"), rules.minLength(8), rules.passwordBytes()],
+          headline: [rules.maxLength(160)],
+          telegram: [rules.telegram()],
+        };
+  const clientErrors = validate(values, schema) as Record<string, string | undefined>;
+  const errorFor = (field: string) => serverErrors[field] ?? (touched[field] ? clientErrors[field] : undefined);
+
+  const bind = (field: keyof typeof EMPTY) => ({
+    name: field,
+    value: values[field],
+    error: errorFor(field),
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+      setValues((v) => ({ ...v, [field]: e.target.value }));
+      setServerErrors((s) => ({ ...s, [field]: "" }));
+      setFormError("");
+    },
+    onBlur: () => setTouched((t) => ({ ...t, [field]: true })),
+  });
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    setTouched(Object.fromEntries(Object.keys(schema).map((k) => [k, true])));
+    if (Object.values(clientErrors).some(Boolean)) {
+      focusErrors();
+      return;
+    }
     setBusy(true);
-    setError("");
+    setFormError("");
     try {
-      if (mode === "login") {
-        await login(form.email, form.password);
-      } else {
-        await register(form);
-      }
-      navigate("/");
+      if (mode === "login") await login(values.email.trim(), values.password);
+      else
+        await register({
+          email: values.email.trim(),
+          password: values.password,
+          name: values.name.trim(),
+          headline: values.headline.trim(),
+          telegram: values.telegram.trim(),
+        });
+      haptic.success();
+      navigate(next, { replace: true });
     } catch (err) {
-      setError((err as Error).message);
+      haptic.error();
+      if (err instanceof ApiError && Object.keys(err.fields).length) {
+        setServerErrors(err.fields);
+        focusErrors();
+      } else {
+        setFormError((err as Error).message);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function demoLogin(email: string) {
+    setBusy(true);
+    setFormError("");
+    try {
+      await login(email, DEMO_PASSWORD);
+      navigate(next, { replace: true });
+    } catch (err) {
+      setFormError((err as Error).message);
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <div className="page page--narrow">
-      <h1 className="page__title">{mode === "login" ? "Вход" : "Регистрация"}</h1>
-
-      <form className="form" onSubmit={submit}>
-        {mode === "register" && (
-          <>
-            <label className="field">
-              <span className="field__label">Имя</span>
-              <input className="input" required minLength={2} value={form.name} onChange={update("name")} />
-            </label>
-            <label className="field">
-              <span className="field__label">Чем занимаетесь</span>
-              <input
-                className="input"
-                placeholder="Например: бэкенд-разработчик, 2 курс"
-                value={form.headline}
-                onChange={update("headline")}
-              />
-            </label>
-            <label className="field">
-              <span className="field__label">Телеграм</span>
-              <input className="input" placeholder="@username" value={form.telegram} onChange={update("telegram")} />
-            </label>
-          </>
-        )}
-        <label className="field">
-          <span className="field__label">Почта</span>
-          <input className="input" type="email" required value={form.email} onChange={update("email")} />
-        </label>
-        <label className="field">
-          <span className="field__label">Пароль</span>
-          <input
-            className="input"
-            type="password"
-            required
-            minLength={8}
-            value={form.password}
-            onChange={update("password")}
-          />
-          {mode === "register" && <span className="field__hint">Минимум 8 символов</span>}
-        </label>
-
-        {error && <ErrorBox message={error} />}
-
-        <button className="btn btn--primary btn--wide" disabled={busy}>
-          {busy ? "Подождите…" : mode === "login" ? "Войти" : "Создать аккаунт"}
-        </button>
-      </form>
-
-      <button
-        className="link-button"
-        onClick={() => {
-          setMode(mode === "login" ? "register" : "login");
-          setError("");
-        }}
-      >
-        {mode === "login" ? "Нет аккаунта — зарегистрироваться" : "Уже есть аккаунт — войти"}
-      </button>
-
-      {mode === "login" && (
-        <div className="demo">
-          <p className="demo__title">Тестовые аккаунты (пароль demo1234)</p>
-          {DEMO.map((d) => (
-            <button
-              key={d.email}
-              className="demo__item"
-              onClick={() => setForm({ ...form, email: d.email, password: "demo1234" })}
-            >
-              <strong>{d.email}</strong>
-              <span>{d.label}</span>
-            </button>
-          ))}
+    <main id="main" className="main">
+      <div className="auth">
+        <div className="page-head">
+          <div>
+            <h1 className="page-head__title" ref={heading} tabIndex={-1} data-route-focus>
+              {mode === "login" ? "Вход" : "Регистрация"}
+            </h1>
+            <p className="page-head__lead">
+              {mode === "login"
+                ? "Чтобы размещать публикации и откликаться."
+                : "Профиль увидят авторы публикаций, на которые вы откликнетесь."}
+            </p>
+          </div>
         </div>
-      )}
-    </div>
+
+        <form ref={formRef} className="form" onSubmit={submit} noValidate>
+          {mode === "register" && (
+            <Field label="Имя и фамилия" required autoComplete="name" maxLength={120} {...bind("name")} />
+          )}
+          <Field
+            label="Почта"
+            required
+            type="email"
+            inputMode="email"
+            autoComplete={mode === "login" ? "username" : "email"}
+            autoCapitalize="none"
+            spellCheck={false}
+            {...bind("email")}
+          />
+          <PasswordField
+            label="Пароль"
+            required
+            autoComplete={mode === "login" ? "current-password" : "new-password"}
+            hint={mode === "register" ? "От 8 символов" : undefined}
+            {...bind("password")}
+          />
+          {mode === "register" && (
+            <>
+              <Field
+                label="Чем занимаетесь"
+                placeholder="Например: бэкенд-разработчик, 2 курс ПИ"
+                autoComplete="organization-title"
+                maxLength={160}
+                {...bind("headline")}
+              />
+              <Field
+                label="Ник в Telegram"
+                placeholder="@username"
+                autoComplete="off"
+                autoCapitalize="none"
+                spellCheck={false}
+                hint="Покажем только тем, чей отклик вы примете или кто примет ваш"
+                {...bind("telegram")}
+              />
+            </>
+          )}
+
+          {formError && <Alert tone="error">{formError}</Alert>}
+
+          <button type="submit" className="btn btn--primary btn--lg btn--block" disabled={busy} aria-busy={busy}>
+            {busy && <Spinner />}
+            {busy ? "Подождите…" : mode === "login" ? "Войти" : "Создать аккаунт"}
+          </button>
+        </form>
+
+        <p className="auth__switch">
+          {mode === "login" ? "Нет аккаунта? " : "Уже есть аккаунт? "}
+          <button type="button" className="link-btn" onClick={() => setMode(mode === "login" ? "register" : "login")}>
+            {mode === "login" ? "Зарегистрироваться" : "Войти"}
+          </button>
+        </p>
+
+        {mode === "login" && (
+          <section className="demo" aria-labelledby="demo-title">
+            <h2 id="demo-title" className="demo__title">
+              Демо-аккаунты для проверки
+            </h2>
+            <p className="subtle">Вход в один клик. Пароль у всех — {DEMO_PASSWORD}.</p>
+            {DEMO.map((d) => (
+              <button key={d.email} type="button" className="demo__item" onClick={() => demoLogin(d.email)} disabled={busy}>
+                <Avatar name={d.name} />
+                <span>
+                  <span className="person__name">{d.name}</span>
+                  <span className="person__headline" style={{ display: "block" }}>
+                    {d.role}
+                  </span>
+                </span>
+                <ChevronRight size={18} aria-hidden />
+              </button>
+            ))}
+          </section>
+        )}
+      </div>
+    </main>
   );
 }

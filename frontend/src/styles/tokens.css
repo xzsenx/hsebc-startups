@@ -1,0 +1,166 @@
+/* Дизайн-токены. Компоненты используют только семантические переменные — ни одного
+   «голого» цвета в разметке. Тёмная тема — отдельная палитра, а не инверсия светлой:
+   каждая пара текст/фон проверена на контраст WCAG AA (см. README). */
+
+:root {
+  /* Поверхности */
+  --c-bg: #f6f8fb;
+  --c-surface: #ffffff;
+  --c-surface-2: #eef2f7;
+  --c-border: #dde3ec;
+  --c-border-strong: #c3ccd9;
+  /* Граница полей ввода — 3:1 к фону (WCAG 1.4.11), иначе поле не отличить от фона. */
+  --c-border-input: #848ea1;
+
+  /* Текст */
+  --c-text: #0f172a;
+  --c-text-muted: #4b5568;
+  --c-text-subtle: #5f6b7d;
+
+  /* Бренд */
+  --c-primary: #1d4ed8;
+  --c-primary-hover: #1e40af;
+  --c-on-primary: #ffffff;
+  --c-primary-soft: #e8efff;
+  --c-focus: #2563eb;
+
+  /* Статусы: цвет всегда дублируется иконкой и текстом */
+  --c-success: #047857;
+  --c-success-bg: #e7f7ef;
+  --c-warning: #a14a06;
+  --c-warning-bg: #fdf3e2;
+  --c-danger: #b42318;
+  --c-danger-bg: #fdecea;
+  --c-neutral: #4b5568;
+  --c-neutral-bg: #eef2f7;
+
+  /* Типы публикаций */
+  --c-startup: #4338ca;
+  --c-startup-bg: #eceefe;
+  --c-vacancy: #0f766e;
+  --c-vacancy-bg: #e3f5f2;
+
+  --c-scrim: rgb(15 23 42 / 0.5);
+  --shadow-sm: 0 1px 2px rgb(15 23 42 / 0.05);
+  --shadow-md: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px rgb(15 23 42 / 0.08);
+
+  /* Типографика */
+  --font: "Golos Text Variable", "Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fs-xs: 0.8125rem; /* 13 */
+  --fs-sm: 0.875rem; /* 14 */
+  --fs-md: 1rem; /* 16 */
+  --fs-lg: 1.125rem; /* 18 */
+  --fs-xl: 1.375rem; /* 22 */
+  --fs-2xl: 1.75rem; /* 28 */
+
+  /* Отступы — шаг 4px */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+  --s-10: 40px;
+  --s-12: 48px;
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-full: 999px;
+
+  --tap: 44px;
+
+  --dur-fast: 120ms;
+  --dur: 200ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --z-header: 20;
+  --z-tabbar: 30;
+  --z-toast: 50;
+  --z-dialog: 100;
+
+  --header-h: 60px;
+  --tabbar-h: 64px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --content-w: 1040px;
+  --reading-w: 680px;
+
+  color-scheme: light;
+}
+
+/* Тёмная палитра. Дублируется для двух случаев: системная тёмная тема без явного
+   выбора и явный выбор «тёмная» в переключателе или в Telegram. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --c-bg: #0b1120;
+    --c-surface: #111a2c;
+    --c-surface-2: #182338;
+    --c-border: #24314a;
+    --c-border-strong: #33425f;
+    --c-border-input: #5d6c87;
+    --c-text: #e7ecf4;
+    --c-text-muted: #a6b1c3;
+    --c-text-subtle: #8e9ab0;
+    --c-primary: #6ea8fe;
+    --c-primary-hover: #93bfff;
+    --c-on-primary: #0b1120;
+    --c-primary-soft: #16264a;
+    --c-focus: #93bfff;
+    --c-success: #4fd1a1;
+    --c-success-bg: #0c2a21;
+    --c-warning: #f5b84a;
+    --c-warning-bg: #2c2110;
+    --c-danger: #ff8a7f;
+    --c-danger-bg: #2f1517;
+    --c-neutral: #a6b1c3;
+    --c-neutral-bg: #1b2539;
+    --c-startup: #aab4ff;
+    --c-startup-bg: #1d1f4a;
+    --c-vacancy: #5fdac8;
+    --c-vacancy-bg: #0b2c2a;
+    --c-scrim: rgb(0 0 0 / 0.6);
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
+    --shadow-md: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --c-bg: #0b1120;
+  --c-surface: #111a2c;
+  --c-surface-2: #182338;
+  --c-border: #24314a;
+  --c-border-strong: #33425f;
+  --c-border-input: #5d6c87;
+  --c-text: #e7ecf4;
+  --c-text-muted: #a6b1c3;
+  --c-text-subtle: #8e9ab0;
+  --c-primary: #6ea8fe;
+  --c-primary-hover: #93bfff;
+  --c-on-primary: #0b1120;
+  --c-primary-soft: #16264a;
+  --c-focus: #93bfff;
+  --c-success: #4fd1a1;
+  --c-success-bg: #0c2a21;
+  --c-warning: #f5b84a;
+  --c-warning-bg: #2c2110;
+  --c-danger: #ff8a7f;
+  --c-danger-bg: #2f1517;
+  --c-neutral: #a6b1c3;
+  --c-neutral-bg: #1b2539;
+  --c-startup: #aab4ff;
+  --c-startup-bg: #1d1f4a;
+  --c-vacancy: #5fdac8;
+  --c-vacancy-bg: #0b2c2a;
+  --c-scrim: rgb(0 0 0 / 0.6);
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35);
+  color-scheme: dark;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --fs-2xl: 2rem;
+  }
+}

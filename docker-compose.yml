@@ -12,26 +12,43 @@ services:
       interval: 3s
       timeout: 3s
       retries: 20
+    # Порт базы наружу не публикуется: доступ только из сети compose.
 
   backend:
     build: ./backend
     environment:
+      ENVIRONMENT: ${ENVIRONMENT:-development}
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-app}@db:5432/${POSTGRES_DB:-app}
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
+      SEED_DEMO: ${SEED_DEMO:-true}
       SEED_PASSWORD: ${SEED_PASSWORD:-demo1234}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8080,http://localhost:5173}
+      DOCS_ENABLED: ${DOCS_ENABLED:-true}
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    # Бэкенд тоже не публикуется: снаружи доступен только через nginx. Иначе можно
+    # было бы обратиться к нему напрямую, подставить X-Forwarded-For и обойти лимиты.
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
 
   frontend:
     build: ./frontend
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
-      - "8080:80"
+      - "8080:8080"
+    security_opt:
+      - no-new-privileges:true
 
 volumes:
   pgdata:

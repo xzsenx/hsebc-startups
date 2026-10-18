@@ -1,4 +1,4 @@
-.PHONY: up down logs test fresh
+.PHONY: up down fresh logs test audit
 
 up:
 	docker compose up --build
@@ -14,3 +14,7 @@ logs:
 
 test:
 	cd backend && .venv/bin/python -m pytest -q
+
+audit:
+	cd backend && .venv/bin/pip-audit -r requirements.txt
+	cd frontend && npm audit

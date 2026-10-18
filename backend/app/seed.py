@@ -8,10 +8,14 @@ from app.models import Application, ApplicationStatus, Post, PostKind, PostStatu
 from app.security import hash_password
 
 USERS = [
-    ("anna@hsebc-demo.ru", "Анна Ковалёва", "Основатель, фудтех", "@anna_demo"),
-    ("maks@hsebc-demo.ru", "Максим Орлов", "Бэкенд-разработчик, 3 курс ПИ", "@maks_demo"),
-    ("dasha@hsebc-demo.ru", "Дарья Лебедева", "Продуктовый дизайнер", "@dasha_demo"),
-    ("ilya@hsebc-demo.ru", "Илья Семёнов", "Аналитик, ищу команду", "@ilya_demo"),
+    ("anna@hsebc-demo.ru", "Анна Ковалёва", "Основатель, фудтех", "@anna_demo",
+     "Запускаю доставку рационов для студентов. Раньше — операционный менеджер в дарксторе."),
+    ("maks@hsebc-demo.ru", "Максим Орлов", "Бэкенд-разработчик, 3 курс ПИ", "@maks_demo",
+     "Python и Go, два пет-проекта в проде. Ищу стартап, где можно отвечать за бэкенд целиком."),
+    ("dasha@hsebc-demo.ru", "Дарья Лебедева", "Продуктовый дизайнер", "@dasha_demo",
+     "Делаю интерфейсы для образовательных сервисов, собираю команду под свой маркетплейс."),
+    ("ilya@hsebc-demo.ru", "Илья Семёнов", "Аналитик, ищу команду", "@ilya_demo",
+     "Аналитика и ML. Ищу людей на хакатоны и в проект на стыке финтеха и данных."),
 ]
 
 POSTS = [
@@ -36,6 +40,8 @@ POSTS = [
 
 def seed() -> None:
     settings = get_settings()
+    if not settings.seed_demo:
+        return
     with SessionLocal() as db:
         if db.scalar(select(func.count()).select_from(User)):
             return
@@ -47,9 +53,9 @@ def seed() -> None:
                 name=name,
                 headline=headline,
                 telegram=telegram,
-                bio="Демо-аккаунт для проверки прототипа.",
+                bio=bio,
             )
-            for email, name, headline, telegram in USERS
+            for email, name, headline, telegram, bio in USERS
         ]
         db.add_all(users)
         db.flush()

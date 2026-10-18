@@ -1,0 +1,254 @@
+/* --- Каркас: шапка, контент, нижняя панель на телефоне --- */
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  background: color-mix(in srgb, var(--c-bg) 86%, transparent);
+  backdrop-filter: saturate(1.4) blur(14px);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.header__inner {
+  max-width: var(--content-w);
+  height: var(--header-h);
+  margin: 0 auto;
+  padding: 0 var(--s-4);
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--tap);
+  color: var(--c-text);
+  font-weight: 700;
+  font-size: var(--fs-md);
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+
+.brand__mark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-sm);
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+}
+
+.brand__sub {
+  display: none;
+  color: var(--c-text-muted);
+  font-weight: 500;
+}
+
+@media (min-width: 480px) {
+  .brand__sub {
+    display: inline;
+  }
+}
+
+.topnav {
+  display: none;
+  gap: var(--s-1);
+  margin-right: auto;
+}
+
+.topnav__link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: var(--tap);
+  padding: 0 var(--s-3);
+  border-radius: var(--r-md);
+  color: var(--c-text-muted);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color var(--dur-fast), background-color var(--dur-fast);
+}
+
+.topnav__link:hover {
+  color: var(--c-text);
+  background: var(--c-surface-2);
+}
+
+.topnav__link[aria-current="page"] {
+  color: var(--c-text);
+  background: var(--c-surface-2);
+}
+
+.header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-left: auto;
+}
+
+
+.main {
+  max-width: var(--content-w);
+  margin: 0 auto;
+  padding: var(--s-5) var(--s-4) calc(var(--tabbar-h) + var(--safe-bottom) + var(--s-8));
+}
+
+.main--reading {
+  max-width: calc(var(--reading-w) + var(--s-4) * 2);
+}
+
+/* Нижняя панель — основная навигация на телефоне, как в нативных приложениях
+   и мини-приложениях Telegram: до неё дотягивается большой палец. */
+.tabbar {
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: var(--z-tabbar);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding: var(--s-1) var(--s-2) calc(var(--s-1) + var(--safe-bottom));
+  background: color-mix(in srgb, var(--c-surface) 92%, transparent);
+  backdrop-filter: saturate(1.4) blur(14px);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px);
+  border-top: 1px solid var(--c-border);
+}
+
+.tabbar__item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 52px;
+  border-radius: var(--r-md);
+  color: var(--c-text-subtle);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  transition: color var(--dur-fast), transform var(--dur-fast) var(--ease-out);
+}
+
+.tabbar__item:active {
+  transform: scale(0.94);
+}
+
+.tabbar__item[aria-current="page"] {
+  color: var(--c-primary);
+}
+
+.tabbar__item--primary .tabbar__icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 28px;
+  border-radius: var(--r-full);
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+}
+
+.tabbar__badge,
+.nav-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--r-full);
+  background: var(--c-danger);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.tabbar__badge {
+  position: absolute;
+  top: 4px;
+  left: calc(50% + 6px);
+}
+
+:root[data-theme="dark"] .tabbar__badge,
+:root[data-theme="dark"] .nav-badge {
+  color: #1a0605;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .tabbar__badge,
+  :root:not([data-theme="light"]) .nav-badge {
+    color: #1a0605;
+  }
+}
+
+@media (min-width: 768px) {
+  .topnav {
+    display: inline-flex;
+  }
+  .tabbar {
+    display: none;
+  }
+  .main {
+    padding: var(--s-8) var(--s-6) var(--s-12);
+  }
+  .header__inner {
+    padding: 0 var(--s-6);
+  }
+}
+
+/* --- Заголовок страницы --- */
+
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--s-3) var(--s-4);
+  margin-bottom: var(--s-6);
+}
+
+.page-head__title {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+}
+
+.page-head__lead {
+  margin-top: var(--s-2);
+  color: var(--c-text-muted);
+  font-size: var(--fs-md);
+  max-width: 60ch;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: var(--tap);
+  margin: calc(var(--s-2) * -1) 0 var(--s-2) calc(var(--s-2) * -1);
+  padding: 0 var(--s-2);
+  border: 0;
+  border-radius: var(--r-md);
+  background: none;
+  color: var(--c-text-muted);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: var(--c-text);
+  background: var(--c-surface-2);
+}
+
+.stack {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.stack--lg {
+  gap: var(--s-6);
+}
